@@ -1,5 +1,5 @@
 class Person:
-    people = {}
+    people: dict[str, "Person"] = {}
 
     def __init__(self, name: str, age: int) -> None:
         self.name = name
@@ -7,20 +7,32 @@ class Person:
         Person.people[name] = self
 
 
-def create_person_list(people: list) -> list:
-    person_list = [
-        Person(person["name"], person["age"]) for person in people
-    ]
+def create_person_list(people: list[dict]) -> list[Person]:
+    for person in people:
+        Person(person["name"], person["age"])
 
     for person in people:
-        person_instance = Person.people[person["name"]]
+        person_instance = Person.people.get(person["name"])
+        if not person_instance:
+            continue
 
-        if "wife" in person and person["wife"]:
-            person_instance.wife = Person.people[person["wife"]]
-            person_instance.wife.husband = person_instance
+        wife_name = person.get("wife")
+        husband_name = person.get("husband")
 
-        elif "husband" in person and person["husband"]:
-            person_instance.husband = Person.people[person["husband"]]
-            person_instance.husband.wife = person_instance
+        if wife_name:
+            wife_instance = Person.people.get(wife_name)
+            if wife_instance:
+                person_instance.wife = wife_instance
+                wife_instance.husband = person_instance
+            else:
+                person_instance.wife = wife_name
 
-    return person_list
+        if husband_name:
+            husband_instance = Person.people.get(husband_name)
+            if husband_instance:
+                person_instance.husband = husband_instance
+                husband_instance.wife = person_instance
+            else:
+                person_instance.husband = husband_name
+
+    return list(Person.people.values())
